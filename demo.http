@@ -1,0 +1,16 @@
+@host = http://localhost:7071
+@filename = sample.bin
+@filePath = ./sample.bin
+
+### Upload a file (raw POST body)
+#   - The upload overwrites existing files with the same name
+POST {{host}}/upload?filename={{filename}}
+Content-Type: application/octet-stream
+
+< {{filePath}}
+
+### Download the same file
+GET {{host}}/download?filename={{filename}}
+
+### Generate and download a 1MB file of random data
+GET {{host}}/generate?sizeMB=1

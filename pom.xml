@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.microsoft.azure</groupId>
+    <artifactId>http-streaming</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+    <name>HTTP Streaming Server Sample</name>
+    <description>Sample Java 21 HTTP streaming server for large file upload/download</description>
+
+    <properties>
+        <java.version>21</java.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.source>${java.version}</maven.compiler.source>
+        <maven.compiler.target>${java.version}</maven.compiler.target>
+        <azure.functions.dir>${project.build.directory}/azure-functions/http-streaming-function</azure.functions.dir>
+    </properties>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.13.0</version>
+                <configuration>
+                    <release>${java.version}</release>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.2.5</version>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.3.0</version>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <mainClass>com.microsoft.azure.FileStreamingServer</mainClass>
+                        </manifest>
+                    </archive>
+                    <!-- Output JAR directly to azure-functions folder -->
+                    <outputDirectory>${azure.functions.dir}</outputDirectory>
+                </configuration>
+            </plugin>
+
+            <!-- Copy function definition files (excluding host.json) -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>3.3.1</version>
+                <executions>
+                    <execution>
+                        <id>copy-function-files</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${azure.functions.dir}</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>http-streaming-function</directory>
+                                    <filtering>false</filtering>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+    <!-- Profiles for local vs cloud builds -->
+    <profiles>
+        <!-- Cloud profile (default) -->
+        <profile>
+            <id>cloud</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-resources-plugin</artifactId>
+                        <version>3.3.1</version>
+                        <executions>
+                            <execution>
+                                <id>copy-cloud-host-json</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>copy-resources</goal>
+                                </goals>
+                                <configuration>
+                                    <outputDirectory>${azure.functions.dir}</outputDirectory>
+                                    <resources>
+                                        <resource>
+                                            <directory>${project.basedir}</directory>
+                                            <filtering>true</filtering>
+                                            <includes>
+                                                <include>cloud.host.json</include>
+                                            </includes>
+                                        </resource>
+                                    </resources>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <!-- Rename cloud.host.json to host.json -->
+                    <plugin>
+                        <groupId>com.coderplus.maven.plugins</groupId>
+                        <artifactId>copy-rename-maven-plugin</artifactId>
+                        <version>1.0.1</version>
+                        <executions>
+                            <execution>
+                                <id>rename-cloud-host-json</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>rename</goal>
+                                </goals>
+                                <configuration>
+                                    <sourceFile>${azure.functions.dir}/cloud.host.json</sourceFile>
+                                    <destinationFile>${azure.functions.dir}/host.json</destinationFile>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <!-- Local profile -->
+        <profile>
+            <id>local</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-resources-plugin</artifactId>
+                        <version>3.3.1</version>
+                        <executions>
+                            <execution>
+                                <id>copy-local-host-json</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>copy-resources</goal>
+                                </goals>
+                                <configuration>
+                                    <outputDirectory>${azure.functions.dir}</outputDirectory>
+                                    <resources>
+                                        <resource>
+                                            <directory>${project.basedir}</directory>
+                                            <filtering>true</filtering>
+                                            <includes>
+                                                <include>local.host.json</include>
+                                            </includes>
+                                        </resource>
+                                    </resources>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <!-- Rename local.host.json to host.json -->
+                    <plugin>
+                        <groupId>com.coderplus.maven.plugins</groupId>
+                        <artifactId>copy-rename-maven-plugin</artifactId>
+                        <version>1.0.1</version>
+                        <executions>
+                            <execution>
+                                <id>rename-local-host-json</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>rename</goal>
+                                </goals>
+                                <configuration>
+                                    <sourceFile>${azure.functions.dir}/local.host.json</sourceFile>
+                                    <destinationFile>${azure.functions.dir}/host.json</destinationFile>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>5.11.0</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+</project>

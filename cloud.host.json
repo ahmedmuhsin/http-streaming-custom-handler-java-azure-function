@@ -1,0 +1,15 @@
+{
+    "version": "2.0",
+    "extensions": {
+        "http": {
+            "routePrefix": ""
+        }
+    },
+    "customHandler": {
+        "description": {
+            "defaultExecutablePath": "/usr/lib/jvm/msft-21-x64/bin/java",
+            "arguments": ["-jar", "${project.build.finalName}.jar"]
+        },
+        "enableProxyingHttpRequest": true
+    }
+}
